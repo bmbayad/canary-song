@@ -1,19 +1,19 @@
-You are the primary implementation agent for this project.
+specYou are the primary implementation agent for this project.
 
 IMPORTANT:
-Read PROJECT_SPEC.md completely before making any changes to the repository.
+Read Bird_Bird_Project_Spec.md completely before making any changes to the repository.
 
-PROJECT_SPEC.md is the authoritative source of truth for this project.
+Bird_Project_Spec.md is the authoritative source of truth for this project.
 
-Your job is to implement the project incrementally, one phase at a time, while preserving the architecture, scope, constraints, and business rules defined in PROJECT_SPEC.md.
+Your job is to implement the project incrementally, one phase at a time, while preserving the architecture, scope, constraints, and business rules defined in Bird_Project_Spec.md.
 
 ==================================================
 GENERAL RULES
 ==================================================
 
-1. Read the entire PROJECT_SPEC.md before starting work.
+1. Read the entire Bird_Project_Spec.md before starting work.
 
-2. PROJECT_SPEC.md defines:
+2. Bird_Project_Spec.md defines:
    - Project scope
    - Functional requirements
    - User roles
@@ -27,7 +27,7 @@ GENERAL RULES
    - Non-goals
    - Open decisions
 
-3. Do not invent major requirements that are not in PROJECT_SPEC.md.
+3. Do not invent major requirements that are not in Bird_Project_Spec.md.
 
 4. Do not add features that are explicitly listed as non-goals.
 
@@ -47,7 +47,7 @@ GENERAL RULES
 ARCHITECTURE RULES
 ==================================================
 
-Follow the architecture defined in PROJECT_SPEC.md:
+Follow the architecture defined in Bird_Project_Spec.md:
 
 Frontend:
 - React
@@ -334,7 +334,7 @@ IMPLEMENTATION PROCESS
 
 Before implementing the current phase:
 
-1. Read PROJECT_SPEC.md completely.
+1. Read Bird_Bird_Project_Spec.md completely.
 2. Inspect the existing repository.
 3. Determine what has already been implemented.
 4. Determine the current implementation phase.
@@ -386,7 +386,7 @@ Do not consider a phase complete if important tests are failing.
 PHASE BOUNDARIES
 ==================================================
 
-The phases defined in PROJECT_SPEC.md are:
+The phases defined in Bird_Project_Spec.md are:
 
 Phase 1:
 Project Scaffolding, Authentication, Users & Roles
@@ -422,7 +422,7 @@ PHASE COMPLETION REQUIREMENTS
 
 Before declaring a phase complete:
 
-1. Verify the implementation against PROJECT_SPEC.md.
+1. Verify the implementation against Bird_Project_Spec.md.
 2. Run the relevant automated tests.
 3. Fix failures.
 4. Verify that previously implemented functionality still works.
@@ -503,7 +503,7 @@ Do not implement anything yet.
 
 First:
 
-1. Read Bird_Project_Spec.md completely.
+1. Read Bird_Bird_Project_Spec.md completely.
 2. Inspect the repository.
 3. Determine the current project state.
 4. Summarize your understanding of the architecture and current repository state.
@@ -516,7 +516,7 @@ Then STOP and wait for my instruction to begin that phase.
 
 Start Phase 1 only.
 
-Implement Phase 1 according to Bird_Project_Spec.md and the master implementation instructions.
+Implement Phase 1 according to Bird_Bird_Project_Spec.md and the master implementation instructions.
 
 Do not begin Phase 2 or any later phase.
 
