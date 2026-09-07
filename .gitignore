@@ -45,6 +45,7 @@ logs/
 # Temp files
 tmp/
 temp/
+render_deployment.txt
 
 # Media files
 *.mp4
