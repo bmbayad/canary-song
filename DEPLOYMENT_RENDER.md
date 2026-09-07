@@ -53,6 +53,8 @@ Once created, Render shows:
 
 **Save these credentials** - you'll need them for backend environment variables.
 
+⚠️ **Connection Security Note**: The password contains special characters. When building the `DATABASE_URL`, URL-encode special characters (e.g., `@` → `%40`, `!` → `%21`). Most password managers handle this automatically, but verify if connection fails.
+
 ### Step 1.3: Create Connection String
 
 Combine the credentials into a single `DATABASE_URL`:
@@ -71,7 +73,13 @@ Replace `[PASSWORD]` with the actual password shown by Render.
 
 ### Step 2.1: Prepare Backend Code
 
-Before deploying, your backend needs:
+Before deploying, understand Render's deployment model:
+
+- **Auto-Deploy**: Render automatically deploys when you push to the connected branch (`main`)
+- **Manual Deploy**: You can manually trigger a deploy from Render dashboard
+- **No Pre-commit Hooks**: Build runs even if local git hooks would have prevented commit
+
+This means: ensure your code is tested before pushing to `main`.
 
 #### 2.1a: Create `render.yaml` (optional but recommended)
 
@@ -136,6 +144,8 @@ apscheduler
    - **Build Command**: `cd backend && pip install -r requirements.txt && alembic upgrade head`
    - **Start Command**: `cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT`
    - **Plan**: `Standard` (for production)
+
+   ⚠️ **Port Configuration Note**: Render exposes your service via the `PORT` environment variable (default `10000`). The `--host 0.0.0.0` is **required** - this binds to all interfaces so Render can route traffic. Do NOT bind to `localhost` or `127.0.0.1`.
 
 4. Click **"Advanced"** and scroll to **"Environment"**
 5. Add the following environment variables:
@@ -334,12 +344,14 @@ Repeat for frontend with domain like `canary-eval.com`
 
 ## Phase 6: Set Up SSL/HTTPS (Automatic)
 
-Render automatically provides SSL certificates. No action needed.
+Render automatically provides SSL certificates at no extra cost. No action needed.
+
+**Important**: Render terminates SSL/HTTPS at the edge and forwards HTTP to your backend on `0.0.0.0:PORT`. Your backend app receives plain HTTP requests - do NOT try to handle HTTPS internally.
 
 Verify:
 ```bash
 curl -I https://canary-backend.onrender.com
-# Should show SSL certificate info
+# Should return 200 with HTTPS headers
 ```
 
 ---
@@ -542,19 +554,34 @@ Frontend build-time only (no runtime env vars):
 
 ### Database Backups
 
-Render provides automatic daily backups (Standard plan):
+Render provides automatic backups:
 
-1. Database → "Settings"
-2. Scroll to "Backups"
+**Free Plan**: Limited backup retention  
+**Standard Plan**: Automatic daily backups with retention (check current policy on Render dashboard)
+
+To access/restore:
+1. Go to your PostgreSQL database service on Render
+2. Click **"Settings"** → **"Backups"**
 3. View backup history
-4. Can restore from any backup
+4. Click **"Restore"** to restore from any backup
 
-### Code Backup
+⚠️ **Point-in-time Recovery**: Check Render's current offering for recovery options (PITR may require higher plan tier)
 
-Your GitHub repo IS your backup:
-- Every deployment is tied to a git commit
-- Roll back by re-deploying an older commit
-- Render has no deletion history; GitHub does
+### Zero-Downtime Credential Rotation
+
+If you need to rotate database credentials (change password):
+1. Database → **"Settings"** → **"Credentials"**
+2. Render handles zero-downtime rotation automatically
+3. No need to redeploy backend (connection string updates automatically)
+
+### Automatic Failover (High Availability)
+
+For production, consider upgrading PostgreSQL to a plan with **High Availability**:
+- Automatic failover to standby database
+- No manual intervention required
+- Transparent to application
+
+Check Render pricing for HA availability in your region.
 
 ---
 
