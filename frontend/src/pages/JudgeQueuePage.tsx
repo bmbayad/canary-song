@@ -11,6 +11,7 @@ interface Recording {
   original_filename: string
   uploaded_at: string
   expires_at: string
+  video_url: string
 }
 
 const JudgeQueuePage: React.FC = () => {
@@ -38,11 +39,11 @@ const JudgeQueuePage: React.FC = () => {
     }
   }
 
-  const handleSelectRecording = async (recordingId: string) => {
+  const handleSelectRecording = async (recordingId: string, videoUrl: string) => {
     try {
       const response = await apiClient.post(`/evaluations/${recordingId}/start`)
       navigate(`/score-entry/${response.data.evaluation_id}`, {
-        state: { recordingId, scoringConfiguration: response.data.scoring_configuration }
+        state: { recordingId, scoringConfiguration: response.data.scoring_configuration, videoUrl }
       })
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to start evaluation')
@@ -102,6 +103,17 @@ const JudgeQueuePage: React.FC = () => {
               const daysLeft = getDaysUntilExpiry(recording.expires_at)
               return (
                 <div key={recording.id} style={styles.recordingCard}>
+                  {recording.video_url && (
+                    <div style={styles.videoContainer}>
+                      <video
+                        controls
+                        style={styles.videoPreview}
+                        src={recording.video_url}
+                      >
+                        Your browser doesn't support video playback
+                      </video>
+                    </div>
+                  )}
                   <div style={styles.recordingInfo}>
                     <h3 style={styles.recordingTitle}>{recording.bird_name}</h3>
                     <p style={styles.recordingDetail}>
@@ -125,7 +137,7 @@ const JudgeQueuePage: React.FC = () => {
                     </p>
                   </div>
                   <button
-                    onClick={() => handleSelectRecording(recording.id)}
+                    onClick={() => handleSelectRecording(recording.id, recording.video_url)}
                     style={styles.selectButton}
                   >
                     Evaluate →
@@ -219,6 +231,19 @@ const styles = {
     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
     display: 'flex',
     flexDirection: 'column',
+  } as React.CSSProperties,
+  videoContainer: {
+    backgroundColor: '#000',
+    borderRadius: '4px',
+    padding: '0.5rem',
+    marginBottom: '1rem',
+    display: 'flex',
+    justifyContent: 'center',
+  } as React.CSSProperties,
+  videoPreview: {
+    maxWidth: '100%',
+    maxHeight: '300px',
+    borderRadius: '4px',
   } as React.CSSProperties,
   recordingInfo: {
     flex: 1,

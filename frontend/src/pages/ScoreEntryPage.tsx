@@ -19,6 +19,12 @@ interface ScoringConfiguration {
   categories: ScoringCategory[]
 }
 
+interface LocationState {
+  recordingId: string
+  scoringConfiguration: ScoringConfiguration
+  videoUrl?: string
+}
+
 const ScoreEntryPage: React.FC = () => {
   const { evaluationId } = useParams<{ evaluationId: string }>()
   const location = useLocation()
@@ -35,6 +41,7 @@ const ScoreEntryPage: React.FC = () => {
   const [showUnableDialog, setShowUnableDialog] = useState(false)
 
   const scoringConfiguration: ScoringConfiguration = location.state?.scoringConfiguration
+  const videoUrl: string | undefined = location.state?.videoUrl
 
   useEffect(() => {
     if (scoringConfiguration?.categories) {
@@ -132,7 +139,20 @@ const ScoreEntryPage: React.FC = () => {
         {error && <div style={{...styles.message, backgroundColor: '#f8d7da', color: '#721c24'}}>{error}</div>}
         {message && <div style={{...styles.message, backgroundColor: '#d4edda', color: '#155724'}}>{message}</div>}
 
-        <div style={styles.card}>
+        <div style={styles.layoutContainer}>
+          {videoUrl && (
+            <div style={styles.videoSection}>
+              <video
+                controls
+                style={styles.videoPlayer}
+                src={videoUrl}
+              >
+                Your browser doesn't support video playback
+              </video>
+            </div>
+          )}
+
+          <div style={styles.scoreCard}>
           <h2 style={styles.heading}>{scoringConfiguration.name}</h2>
           <p style={styles.description}>{scoringConfiguration.description}</p>
 
@@ -280,6 +300,25 @@ const styles = {
     flex: 1,
     padding: '2rem',
   } as React.CSSProperties,
+  layoutContainer: {
+    display: 'grid',
+    gridTemplateColumns: videoUrl ? '1fr 1fr' : '1fr',
+    gap: '2rem',
+    alignItems: 'start',
+  } as React.CSSProperties,
+  videoSection: {
+    backgroundColor: '#000',
+    borderRadius: '8px',
+    padding: '1rem',
+    position: 'sticky',
+    top: '2rem',
+  } as React.CSSProperties,
+  videoPlayer: {
+    width: '100%',
+    maxHeight: '600px',
+    borderRadius: '4px',
+    display: 'block',
+  } as React.CSSProperties,
   card: {
     backgroundColor: 'white',
     padding: '2rem',
@@ -288,6 +327,7 @@ const styles = {
     maxWidth: '800px',
     margin: '0 auto',
   } as React.CSSProperties,
+  scoreCard: {
   heading: {
     marginTop: 0,
     color: '#333',
