@@ -92,36 +92,6 @@ const DashboardPage: React.FC = () => {
               </>
             )}
           </div>
-
-          <div style={styles.infoBox}>
-            {user?.role === 'Judge' ? (
-              <>
-                <h4>📋 Phase 4 Features</h4>
-                <ul>
-                  <li>✅ Evaluation queue</li>
-                  <li>✅ Score entry interface</li>
-                  <li>✅ Category-based scoring</li>
-                  <li>✅ Auto-calculation</li>
-                  <li>✅ Blind judging</li>
-                  <li>✅ Unable to evaluate option</li>
-                  <li>✅ Historical snapshots</li>
-                </ul>
-              </>
-            ) : (
-              <>
-                <h4>📋 Phase 5 Features</h4>
-                <ul>
-                  <li>✅ View evaluation results</li>
-                  <li>✅ See all judge scores</li>
-                  <li>✅ Review judge comments</li>
-                  <li>✅ Aggregate score calculation</li>
-                  <li>✅ Evaluation status tracking</li>
-                  <li>✅ 14-day media retention</li>
-                  <li>📋 Phase 6: Admin Management (coming soon)</li>
-                </ul>
-              </>
-            )}
-          </div>
         </div>
       </main>
     </div>
@@ -214,12 +184,6 @@ const styles = {
     margin: 0,
     color: '#666',
     fontSize: '0.9rem',
-  } as React.CSSProperties,
-  infoBox: {
-    backgroundColor: '#e3f2fd',
-    padding: '1rem',
-    borderRadius: '4px',
-    borderLeft: '4px solid #2196f3',
   } as React.CSSProperties,
 }
 

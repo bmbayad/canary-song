@@ -8,6 +8,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage'
 import DashboardPage from './pages/DashboardPage'
 import ProfilePage from './pages/ProfilePage'
 import MyBirdsPage from './pages/MyBirdsPage'
+import BirdRecordingsPage from './pages/BirdRecordingsPage'
 import AddBirdPage from './pages/AddBirdPage'
 import UploadRecordingPage from './pages/UploadRecordingPage'
 import MyRecordingsPage from './pages/MyRecordingsPage'
@@ -88,6 +89,14 @@ const AppContent = () => {
         element={
           <ProtectedRoute>
             <MyBirdsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/bird-recordings/:birdId"
+        element={
+          <ProtectedRoute>
+            <BirdRecordingsPage />
           </ProtectedRoute>
         }
       />

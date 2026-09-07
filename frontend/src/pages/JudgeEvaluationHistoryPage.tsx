@@ -60,10 +60,10 @@ const JudgeEvaluationHistoryPage: React.FC = () => {
     switch (status) {
       case 'Submitted':
         return { text: 'Completed', color: '#28a745', bgColor: '#e8f5e9' }
-      case 'In Progress':
-        return { text: 'In Progress', color: '#ffc107', bgColor: '#fff8e1' }
       case 'Unable to Evaluate':
-        return { text: 'Unable', color: '#ff9800', bgColor: '#fff3e0' }
+        return { text: 'Unable to Evaluate', color: '#ff9800', bgColor: '#fff3e0' }
+      case 'In Progress':
+        return { text: 'Resume', color: '#007bff', bgColor: '#e3f2fd' }
       default:
         return { text: status, color: '#666', bgColor: '#f5f5f5' }
     }
@@ -183,10 +183,25 @@ const JudgeEvaluationHistoryPage: React.FC = () => {
                         )}
                       </div>
                       <div
+                        onClick={() => {
+                          if (evaluation.status === 'In Progress') {
+                            navigate(`/score-entry/${evaluation.id}`)
+                          }
+                        }}
                         style={{
                           ...styles.statusBadge,
                           color: status.color,
                           backgroundColor: status.bgColor,
+                          cursor: evaluation.status === 'In Progress' ? 'pointer' : 'default',
+                          transition: 'all 0.2s',
+                        }}
+                        onMouseEnter={(e) => {
+                          if (evaluation.status === 'In Progress') {
+                            e.currentTarget.style.opacity = '0.8'
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.opacity = '1'
                         }}
                       >
                         {status.text}

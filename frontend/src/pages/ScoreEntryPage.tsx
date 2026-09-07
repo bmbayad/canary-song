@@ -39,9 +39,51 @@ const ScoreEntryPage: React.FC = () => {
   const [message, setMessage] = useState('')
   const [unableReason, setUnableReason] = useState('')
   const [showUnableDialog, setShowUnableDialog] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [loadedConfig, setLoadedConfig] = useState<ScoringConfiguration | null>(null)
 
-  const scoringConfiguration: ScoringConfiguration = location.state?.scoringConfiguration
+  const scoringConfiguration: ScoringConfiguration = location.state?.scoringConfiguration || loadedConfig
   const videoUrl: string | undefined = location.state?.videoUrl
+
+  useEffect(() => {
+    const loadEvaluationData = async () => {
+      if (!location.state?.scoringConfiguration && evaluationId) {
+        try {
+          // Fetch the evaluation to get the recording ID
+          const evalResponse = await apiClient.get(`/evaluations/${evaluationId}`)
+          const evaluation = evalResponse.data
+
+          if (!evaluation || !evaluation.recording_id) {
+            throw new Error('Could not find recording for this evaluation')
+          }
+
+          setComments(evaluation.comments || '')
+
+          // The scoring configuration was stored when the evaluation was started
+          // We need to fetch it based on the recording's bird type
+          // For now, let's try to re-start the evaluation to get the config
+          // This won't create a duplicate because we already have an evaluation
+          try {
+            const startResponse = await apiClient.post(`/evaluations/${evaluation.recording_id}/start`)
+            if (startResponse.data.scoring_configuration) {
+              setLoadedConfig(startResponse.data.scoring_configuration)
+            }
+          } catch (startErr) {
+            // If start fails, it's OK - we're resuming, not starting
+            setError('Could not load scoring configuration')
+          }
+        } catch (err: any) {
+          console.error('Failed to load evaluation:', err)
+          setError(err.response?.data?.detail || 'Failed to load evaluation')
+        } finally {
+          setLoading(false)
+        }
+      } else {
+        setLoading(false)
+      }
+    }
+    loadEvaluationData()
+  }, [evaluationId, location.state?.scoringConfiguration, apiClient])
 
   useEffect(() => {
     if (scoringConfiguration?.categories) {
@@ -116,8 +158,12 @@ const ScoreEntryPage: React.FC = () => {
     }
   }
 
-  if (!scoringConfiguration) {
+  if (loading) {
     return <div style={styles.loading}>Loading scoring configuration...</div>
+  }
+
+  if (!scoringConfiguration) {
+    return <div style={styles.loading}>Error: Could not load scoring configuration</div>
   }
 
   const totalScore = calculateTotalScore()
@@ -231,6 +277,7 @@ const ScoreEntryPage: React.FC = () => {
               Unable to Evaluate
             </button>
           </div>
+          </div>
         </div>
       </main>
 
@@ -302,7 +349,7 @@ const styles = {
   } as React.CSSProperties,
   layoutContainer: {
     display: 'grid',
-    gridTemplateColumns: videoUrl ? '1fr 1fr' : '1fr',
+    gridTemplateColumns: '1fr 1fr',
     gap: '2rem',
     alignItems: 'start',
   } as React.CSSProperties,
@@ -328,6 +375,13 @@ const styles = {
     margin: '0 auto',
   } as React.CSSProperties,
   scoreCard: {
+    backgroundColor: 'white',
+    padding: '2rem',
+    borderRadius: '8px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    maxWidth: '800px',
+    margin: '0 auto',
+  } as React.CSSProperties,
   heading: {
     marginTop: 0,
     color: '#333',

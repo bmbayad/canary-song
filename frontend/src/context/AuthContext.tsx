@@ -39,10 +39,17 @@ const API_URL = 'http://localhost:8000'
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [failedQueue, setFailedQueue] = useState<Array<(token: string) => void>>([])
 
   const apiClient = axios.create({
     baseURL: API_URL,
   })
+
+  const processQueue = (token: string) => {
+    failedQueue.forEach(prom => prom(token))
+    setFailedQueue([])
+  }
 
   apiClient.interceptors.request.use((config) => {
     const token = localStorage.getItem('access_token')
@@ -51,6 +58,52 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
     return config
   })
+
+  apiClient.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      const originalRequest = error.config
+
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        if (isRefreshing) {
+          return new Promise((resolve) => {
+            failedQueue.push((token: string) => {
+              originalRequest.headers.Authorization = `Bearer ${token}`
+              resolve(apiClient(originalRequest))
+            })
+          })
+        }
+
+        originalRequest._retry = true
+        setIsRefreshing(true)
+
+        try {
+          const response = await axios.post(`${API_URL}/auth/refresh`, {}, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+            },
+          })
+
+          if (response.data.access_token) {
+            localStorage.setItem('access_token', response.data.access_token)
+            apiClient.defaults.headers.common['Authorization'] = `Bearer ${response.data.access_token}`
+            originalRequest.headers.Authorization = `Bearer ${response.data.access_token}`
+            processQueue(response.data.access_token)
+            setIsRefreshing(false)
+            return apiClient(originalRequest)
+          }
+        } catch (refreshError) {
+          console.error('Token refresh failed:', refreshError)
+          localStorage.removeItem('access_token')
+          setUser(null)
+          setIsRefreshing(false)
+          window.location.href = '/login'
+        }
+      }
+
+      return Promise.reject(error)
+    }
+  )
 
   useEffect(() => {
     const checkAuth = async () => {

@@ -26,6 +26,7 @@ from app.services.evaluation_service import (
     get_recording_evaluation_status,
 )
 from app.services.scoring_service import get_active_categories
+from app.services.r2_service import R2Service
 from app.models.bird import Bird
 from app.models.recording import Recording
 from datetime import datetime
@@ -46,11 +47,13 @@ def get_queue(
         )
 
     available = get_judge_queue(db, current_user.id)
+    r2_service = R2Service()
 
     recordings = []
     for recording in available:
         bird = recording.bird
         bird_type = recording.bird_type
+        video_url = r2_service.generate_presigned_download_url(recording.storage_key)
         rec = RecordingForQueueResponse(
             id=recording.id,
             bird_name=bird.name,
@@ -59,6 +62,7 @@ def get_queue(
             original_filename=recording.original_filename,
             uploaded_at=recording.uploaded_at,
             expires_at=recording.expires_at,
+            video_url=video_url,
         )
         recordings.append(rec)
 
@@ -233,7 +237,7 @@ def list_recording_results(
             expires_at=recording.expires_at,
             is_expired=is_expired,
             total_judges=eval_status["submitted_count"] + eval_status["unable_to_evaluate_count"],
-            completed_count=eval_status["submitted_count"] + eval_status["unable_to_evaluate_count"],
+            completed_count=eval_status["submitted_count"],
             unable_count=eval_status["unable_to_evaluate_count"],
             aggregate_score=eval_status["aggregate_score"],
         )
@@ -278,6 +282,8 @@ def get_recording_results(
 
     eval_status = get_recording_evaluation_status(db, rec_uuid)
     evaluations = eval_status["evaluations"]
+    r2_service = R2Service()
+    video_url = r2_service.generate_presigned_download_url(recording.storage_key)
 
     is_expired = recording.expires_at < datetime.utcnow()
 
@@ -314,6 +320,7 @@ def get_recording_results(
         uploaded_at=recording.uploaded_at,
         expires_at=recording.expires_at,
         is_expired=is_expired,
+        video_url=video_url,
         aggregate_score=eval_status["aggregate_score"],
         total_judges=eval_status["submitted_count"] + eval_status["unable_to_evaluate_count"],
         evaluations=eval_items,

@@ -28,6 +28,7 @@ const MyBirdsPage: React.FC = () => {
   const [message, setMessage] = useState('')
   const [recordingCounts, setRecordingCounts] = useState<Record<string, number>>({})
   const [archiveDialogBird, setArchiveDialogBird] = useState<Bird | null>(null)
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('card')
 
   useEffect(() => {
     loadBirds()
@@ -128,9 +129,33 @@ const MyBirdsPage: React.FC = () => {
       <main style={styles.main}>
         <div style={styles.header}>
           <h2 style={styles.heading}>My Birds</h2>
-          <Link to="/add-bird" style={styles.addButton}>
-            ➕ Add Bird
-          </Link>
+          <div style={styles.headerActions}>
+            <div style={styles.viewToggle}>
+              <button
+                onClick={() => setViewMode('card')}
+                style={{
+                  ...styles.viewButton,
+                  backgroundColor: viewMode === 'card' ? '#007bff' : '#e0e0e0',
+                  color: viewMode === 'card' ? 'white' : '#333',
+                }}
+              >
+                ▦ Card
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                style={{
+                  ...styles.viewButton,
+                  backgroundColor: viewMode === 'list' ? '#007bff' : '#e0e0e0',
+                  color: viewMode === 'list' ? 'white' : '#333',
+                }}
+              >
+                ≡ List
+              </button>
+            </div>
+            <Link to="/add-bird" style={styles.addButton}>
+              ➕ Add Bird
+            </Link>
+          </div>
         </div>
 
         {message && (
@@ -151,10 +176,10 @@ const MyBirdsPage: React.FC = () => {
             <div style={styles.section}>
               <h3 style={styles.sectionTitle}>Active Birds</h3>
               {activeBirds.length > 0 ? (
-                <div style={styles.birdsList}>
+                <div style={{...styles.birdsList, ...(viewMode === 'list' ? styles.listLayout : {})}}>
                   {activeBirds.map(bird => {
                     const hasRecordings = (recordingCounts[bird.id] || 0) > 0
-                    return (
+                    return viewMode === 'card' ? (
                       <div key={bird.id} style={styles.birdCard}>
                         <div style={styles.birdInfo}>
                           <h4 style={styles.birdName}>{bird.name}</h4>
@@ -168,13 +193,59 @@ const MyBirdsPage: React.FC = () => {
                             <strong>Recordings:</strong> {recordingCounts[bird.id] || 0}
                           </p>
                         </div>
-                        <div style={styles.birdActions}>
+                        <div style={styles.birdActionsColumn}>
                           <button
                             onClick={() => navigate('/upload-recording', { state: { birdId: bird.id } })}
                             style={styles.uploadButton}
                           >
                             📹 Upload
                           </button>
+                          {hasRecordings && (
+                            <button
+                              onClick={() => navigate(`/bird-recordings/${bird.id}`, { state: { birdName: bird.name } })}
+                              style={styles.recordingsButton}
+                            >
+                              📺 Recordings
+                            </button>
+                          )}
+                          {hasRecordings ? (
+                            <button
+                              onClick={() => setArchiveDialogBird(bird)}
+                              style={styles.archiveButton}
+                            >
+                              Stop Judging
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleDelete(bird.id, bird.name)}
+                              style={styles.deleteButton}
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div key={bird.id} style={styles.birdListItem}>
+                        <div style={styles.birdListInfo}>
+                          <h4 style={styles.birdListName}>{bird.name}</h4>
+                          <p style={styles.birdListDetail}>{birdTypes[bird.bird_type_id] || 'Unknown'} • Band: {bird.leg_band_number} • {recordingCounts[bird.id] || 0} recording{(recordingCounts[bird.id] || 0) !== 1 ? 's' : ''}</p>
+                        </div>
+                        <div style={styles.birdListActions}>
+                          <button
+                            onClick={() => navigate('/upload-recording', { state: { birdId: bird.id } })}
+                            style={styles.uploadButton}
+                          >
+                            📹 Upload
+                          </button>
+                          {hasRecordings && (
+                            <button
+                              onClick={() => navigate(`/bird-recordings/${bird.id}`, { state: { birdName: bird.name } })}
+                              style={styles.recordingsButton}
+                            >
+                              📺 Recordings
+                            </button>
+                          )}
                           {hasRecordings ? (
                             <button
                               onClick={() => setArchiveDialogBird(bird)}
@@ -206,20 +277,51 @@ const MyBirdsPage: React.FC = () => {
             {archivedBirds.length > 0 && (
               <div style={styles.section}>
                 <h3 style={styles.sectionTitle}>Archived Birds</h3>
-                <div style={styles.birdsList}>
+                <div style={{...styles.birdsList, ...(viewMode === 'list' ? styles.listLayout : {})}}>
                   {archivedBirds.map(bird => (
-                    <div key={bird.id} style={styles.birdCard}>
-                      <div style={styles.birdInfo}>
-                        <h4 style={styles.birdName}>{bird.name}</h4>
-                        <p style={styles.birdDetail}>
-                          <strong>Band Number:</strong> {bird.leg_band_number}
-                        </p>
-                        <p style={styles.birdDetail}>
-                          <strong>Type:</strong> {birdTypes[bird.bird_type_id] || 'Unknown'}
-                        </p>
-                        <p style={styles.archivedNote}>📋 Archived - No new recordings can be uploaded</p>
+                    viewMode === 'card' ? (
+                      <div key={bird.id} style={styles.birdCard}>
+                        <div style={styles.birdInfo}>
+                          <h4 style={styles.birdName}>{bird.name}</h4>
+                          <p style={styles.birdDetail}>
+                            <strong>Band Number:</strong> {bird.leg_band_number}
+                          </p>
+                          <p style={styles.birdDetail}>
+                            <strong>Type:</strong> {birdTypes[bird.bird_type_id] || 'Unknown'}
+                          </p>
+                          <p style={styles.archivedNote}>📋 Archived - No new recordings can be uploaded</p>
+                        </div>
+                        {(recordingCounts[bird.id] || 0) > 0 && (
+                          <div style={styles.birdActionsColumn}>
+                            <button
+                              onClick={() => navigate(`/bird-recordings/${bird.id}`, { state: { birdName: bird.name } })}
+                              style={styles.recordingsButton}
+                            >
+                              📺 Recordings
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    </div>
+                    ) : (
+                      <div key={bird.id} style={styles.birdListItem}>
+                        <div style={styles.birdListInfo}>
+                          <h4 style={styles.birdListName}>{bird.name}</h4>
+                          <p style={{...styles.birdListDetail, color: '#ff9800'}}>
+                            {birdTypes[bird.bird_type_id] || 'Unknown'} • Band: {bird.leg_band_number} • {recordingCounts[bird.id] || 0} recording{(recordingCounts[bird.id] || 0) !== 1 ? 's' : ''} • Archived
+                          </p>
+                        </div>
+                        {(recordingCounts[bird.id] || 0) > 0 && (
+                          <div style={styles.birdListActions}>
+                            <button
+                              onClick={() => navigate(`/bird-recordings/${bird.id}`, { state: { birdName: bird.name } })}
+                              style={styles.recordingsButton}
+                            >
+                              📺 Recordings
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )
                   ))}
                 </div>
               </div>
@@ -273,20 +375,43 @@ const styles = {
   main: { flex: 1, padding: '2rem' } as React.CSSProperties,
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' } as React.CSSProperties,
   heading: { marginTop: 0, color: '#333' } as React.CSSProperties,
+  headerActions: { display: 'flex', gap: '1rem', alignItems: 'center' } as React.CSSProperties,
+  viewToggle: { display: 'flex', gap: '0.5rem' } as React.CSSProperties,
+  viewButton: {
+    padding: '0.5rem 1rem',
+    backgroundColor: '#e0e0e0',
+    color: '#333',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '0.9rem',
+    transition: 'all 0.2s',
+  } as React.CSSProperties,
   addButton: { padding: '0.5rem 1rem', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', textDecoration: 'none', cursor: 'pointer', display: 'inline-block' } as React.CSSProperties,
   message: { padding: '1rem', borderRadius: '4px', marginBottom: '1rem', fontSize: '0.9rem' } as React.CSSProperties,
   section: { marginBottom: '2rem' } as React.CSSProperties,
   sectionTitle: { color: '#333', fontSize: '1.1rem', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '2px solid #007bff' } as React.CSSProperties,
   birdsList: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' } as React.CSSProperties,
-  birdCard: { backgroundColor: 'white', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' } as React.CSSProperties,
+  listLayout: { gridTemplateColumns: '1fr', gap: '0.5rem' } as React.CSSProperties,
+  birdCard: { backgroundColor: 'white', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', display: 'flex', gap: '1rem', alignItems: 'flex-start' } as React.CSSProperties,
+  cardActionsRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' } as React.CSSProperties,
+  cardActionsLeft: { display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 } as React.CSSProperties,
+  cardActionsRight: { display: 'flex', alignItems: 'center' } as React.CSSProperties,
+  birdActionsColumn: { display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '20%', minWidth: '120px', flexShrink: 0 } as React.CSSProperties,
+  birdListItem: { backgroundColor: 'white', padding: '1rem', borderRadius: '6px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: '4px solid #007bff' } as React.CSSProperties,
   birdInfo: { flex: 1 } as React.CSSProperties,
+  birdListInfo: { flex: 1 } as React.CSSProperties,
   birdName: { margin: '0 0 0.5rem 0', color: '#333' } as React.CSSProperties,
+  birdListName: { margin: 0, color: '#333', fontSize: '1rem' } as React.CSSProperties,
   birdDetail: { margin: '0.3rem 0', color: '#666', fontSize: '0.9rem' } as React.CSSProperties,
+  birdListDetail: { margin: '0.25rem 0', color: '#666', fontSize: '0.85rem' } as React.CSSProperties,
   archivedNote: { margin: '0.5rem 0 0 0', color: '#ff9800', fontSize: '0.9rem', fontWeight: 'bold' } as React.CSSProperties,
   birdActions: { display: 'flex', gap: '0.5rem', marginLeft: '1rem' } as React.CSSProperties,
-  uploadButton: { padding: '0.5rem 1rem', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' } as React.CSSProperties,
-  archiveButton: { padding: '0.5rem 1rem', backgroundColor: '#ff9800', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' } as React.CSSProperties,
-  deleteButton: { padding: '0.5rem 1rem', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' } as React.CSSProperties,
+  birdListActions: { display: 'flex', gap: '0.5rem', marginLeft: '1rem', flexShrink: 0 } as React.CSSProperties,
+  uploadButton: { padding: '0.5rem 0.75rem', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem', width: '100%', textAlign: 'center' } as React.CSSProperties,
+  recordingsButton: { padding: '0.5rem 0.75rem', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem', width: '100%', textAlign: 'center' } as React.CSSProperties,
+  archiveButton: { padding: '0.5rem 0.75rem', backgroundColor: '#ff9800', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem', width: '100%', textAlign: 'center' } as React.CSSProperties,
+  deleteButton: { padding: '0.5rem 0.75rem', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem', width: '100%', textAlign: 'center' } as React.CSSProperties,
   emptyState: { backgroundColor: 'white', padding: '2rem', borderRadius: '8px', textAlign: 'center', color: '#666' } as React.CSSProperties,
   dialog: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 } as React.CSSProperties,
   dialogContent: { backgroundColor: 'white', padding: '2rem', borderRadius: '8px', maxWidth: '400px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' } as React.CSSProperties,

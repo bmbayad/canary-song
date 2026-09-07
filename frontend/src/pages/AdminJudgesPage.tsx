@@ -191,7 +191,7 @@ const AdminJudgesPage: React.FC = () => {
                     </p>
                   </div>
                   <div style={styles.judgeActions}>
-                    <div style={styles.statusBadge} style={{
+                    <div style={{
                       ...styles.statusBadge,
                       backgroundColor: judge.status === 'Active' ? '#e8f5e9' : '#ffebee',
                       color: judge.status === 'Active' ? '#2e7d32' : '#c62828',

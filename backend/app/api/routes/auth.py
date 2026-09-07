@@ -139,3 +139,14 @@ def reset_password(
     db.refresh(current_user)
 
     return UserResponse.model_validate(current_user)
+
+
+@router.post("/refresh", response_model=TokenResponse)
+def refresh_token(current_user: User = Depends(get_current_user)):
+    """Refresh access token"""
+    access_token = create_access_token(data={"sub": str(current_user.id)})
+    return TokenResponse(
+        access_token=access_token,
+        token_type="bearer",
+        user=UserResponse.model_validate(current_user),
+    )

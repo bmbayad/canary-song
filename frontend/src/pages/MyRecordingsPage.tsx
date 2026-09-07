@@ -32,6 +32,8 @@ const MyRecordingsPage: React.FC = () => {
   const [evaluationStatus, setEvaluationStatus] = useState<Record<string, any>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [message, setMessage] = useState('')
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('card')
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     loadRecordings()
@@ -117,36 +119,20 @@ const MyRecordingsPage: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Completed':
-        return '#28a745'
-      case 'Pending':
-        return '#ffc107'
-      case 'In Progress':
-        return '#007bff'
-      case 'Expired':
-        return '#999'
-      default:
-        return '#666'
-    }
-  }
-
   const getEvaluationStatusText = (recordingId: string): { text: string; color: string } => {
     const status = evaluationStatus[recordingId]
     if (!status) return { text: 'No evaluations', color: '#999' }
 
-    const { total_judges, completed_count, unable_count } = status
-    if (completed_count === 0 && unable_count === 0) {
-      return { text: `Pending (0/${total_judges})`, color: '#ffc107' }
+    const { completed_count, unable_count } = status
+    const totalEvaluated = completed_count + unable_count
+
+    if (totalEvaluated === 0) {
+      return { text: 'Pending Evaluation', color: '#ffc107' }
     }
-    if (completed_count === total_judges) {
-      return { text: `Completed (${total_judges}/${total_judges})`, color: '#28a745' }
-    }
-    if (completed_count + unable_count === total_judges) {
-      return { text: `Completed (${completed_count}/${total_judges})`, color: '#28a745' }
-    }
-    return { text: `In Progress (${completed_count}/${total_judges})`, color: '#007bff' }
+
+    const judgeCount = totalEvaluated
+    const judgeLabel = judgeCount === 1 ? 'judge' : 'judges'
+    return { text: `Evaluated by ${judgeCount} ${judgeLabel}`, color: '#28a745' }
   }
 
   const getDaysUntilExpiry = (expiresAt: string): number => {
@@ -159,6 +145,23 @@ const MyRecordingsPage: React.FC = () => {
   if (isLoading) {
     return <div style={styles.loading}>{t('common.loading')}</div>
   }
+
+  const groupedRecordings = recordings.reduce((acc, rec) => {
+    const bird = birds[rec.bird_id]
+    const query = searchQuery.toLowerCase()
+
+    const matchesBirdName = bird?.name.toLowerCase().includes(query)
+    const matchesBandNumber = bird?.leg_band_number.toLowerCase().includes(query)
+    const matchesFilename = rec.original_filename.toLowerCase().includes(query)
+
+    if (!query || matchesBirdName || matchesBandNumber || matchesFilename) {
+      const birdId = rec.bird_id
+      if (!acc[birdId]) acc[birdId] = []
+      acc[birdId].push(rec)
+    }
+
+    return acc
+  }, {} as Record<string, Recording[]>)
 
   return (
     <div style={styles.container}>
@@ -180,6 +183,37 @@ const MyRecordingsPage: React.FC = () => {
       <main style={styles.main}>
         <div style={styles.header}>
           <h2 style={styles.heading}>My Recordings</h2>
+          <div style={styles.headerControls}>
+            <input
+              type="text"
+              placeholder="Search by bird name, band, or file..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={styles.searchInput}
+            />
+            <div style={styles.viewToggle}>
+              <button
+                onClick={() => setViewMode('card')}
+                style={{
+                  ...styles.viewButton,
+                  backgroundColor: viewMode === 'card' ? '#007bff' : '#e0e0e0',
+                  color: viewMode === 'card' ? 'white' : '#333',
+                }}
+              >
+                ▦ Card
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                style={{
+                  ...styles.viewButton,
+                  backgroundColor: viewMode === 'list' ? '#007bff' : '#e0e0e0',
+                  color: viewMode === 'list' ? 'white' : '#333',
+                }}
+              >
+                ≡ List
+              </button>
+            </div>
+          </div>
         </div>
 
         {message && (
@@ -193,72 +227,100 @@ const MyRecordingsPage: React.FC = () => {
         )}
 
         {recordings.length > 0 ? (
-          <div style={styles.recordingsList}>
-            {recordings.map(recording => {
-              const bird = birds[recording.bird_id]
-              const daysLeft = getDaysUntilExpiry(recording.expires_at)
-              const isExpired = daysLeft <= 0
-
+          <div>
+            {Object.entries(groupedRecordings).map(([birdId, birdRecordings]) => {
+              const bird = birds[birdId]
               return (
-                <div key={recording.id} style={styles.recordingCard}>
-                  <div style={styles.recordingInfo}>
-                    <h4 style={styles.recordingTitle}>
-                      {bird?.name || 'Unknown Bird'} - {recording.original_filename}
-                    </h4>
-                    <p style={styles.recordingDetail}>
-                      <strong>Band Number:</strong> {bird?.leg_band_number || 'N/A'}
-                    </p>
-                    <p style={styles.recordingDetail}>
-                      <strong>File:</strong> {formatFileSize(recording.file_size)} • {formatDuration(recording.duration)}
-                    </p>
-                    <p style={styles.recordingDetail}>
-                      <strong>Uploaded:</strong> {new Date(recording.uploaded_at).toLocaleDateString()}
-                    </p>
-                    <div style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
-                      <div style={{
-                        ...styles.statusBadge,
-                        backgroundColor: getStatusColor(recording.status),
-                        opacity: isExpired ? 0.6 : 1
-                      }}>
-                        {recording.status}
-                      </div>
-                      <p style={{
-                        margin: 0,
-                        fontSize: '0.9rem',
-                        color: daysLeft <= 3 ? '#d32f2f' : '#666',
-                        fontWeight: daysLeft <= 3 ? 'bold' : 'normal'
-                      }}>
-                        {isExpired ? '⏰ Expired' : `⏰ Expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`}
-                      </p>
-                    </div>
+                <div key={birdId} style={styles.section}>
+                  <h3 style={styles.sectionTitle}>{bird?.name || 'Unknown Bird'}</h3>
+                  <div style={{...styles.recordingsList, ...(viewMode === 'list' ? styles.listLayout : {})}}>
+                    {birdRecordings.map(recording => {
+                      const daysLeft = getDaysUntilExpiry(recording.expires_at)
+                      const isExpired = daysLeft <= 0
 
-                    <div style={{marginTop: '1rem', borderTop: '1px solid #e0e0e0', paddingTop: '1rem'}}>
-                      <p style={{...styles.recordingDetail, marginBottom: '0.5rem'}}>
-                        <strong>📊 Evaluations:</strong>
-                      </p>
-                      <div style={{display: 'flex', gap: '1rem', alignItems: 'center', justifyContent: 'space-between'}}>
-                        <div style={{
-                          ...styles.statusBadge,
-                          backgroundColor: getEvaluationStatusText(recording.id).color
-                        }}>
-                          {getEvaluationStatusText(recording.id).text}
+                      return viewMode === 'card' ? (
+                        <div key={recording.id} style={styles.recordingCard}>
+                          <div style={styles.recordingInfo}>
+                            <h4 style={styles.recordingTitle}>{recording.original_filename}</h4>
+                            <p style={styles.recordingDetail}>
+                              <strong>Band Number:</strong> {bird?.leg_band_number || 'N/A'}
+                            </p>
+                            <p style={styles.recordingDetail}>
+                              <strong>File:</strong> {formatFileSize(recording.file_size)} • {formatDuration(recording.duration)}
+                            </p>
+                            <p style={styles.recordingDetail}>
+                              <strong>Uploaded:</strong> {new Date(recording.uploaded_at).toLocaleDateString()}
+                            </p>
+                            <p style={{
+                              margin: '0.5rem 0 0 0',
+                              fontSize: '0.9rem',
+                              color: daysLeft <= 3 ? '#d32f2f' : '#666',
+                              fontWeight: daysLeft <= 3 ? 'bold' : 'normal'
+                            }}>
+                              {isExpired ? '⏰ Expired' : `⏰ Expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`}
+                            </p>
+                          </div>
+
+                          <div style={styles.recordingActionsColumn}>
+                            <div
+                              onClick={() => navigate(`/evaluations/${recording.id}`)}
+                              style={{
+                                ...styles.statusBadge,
+                                backgroundColor: getEvaluationStatusText(recording.id).color,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                width: '100%',
+                                textAlign: 'center',
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+                              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                            >
+                              {getEvaluationStatusText(recording.id).text}
+                            </div>
+                            <button
+                              onClick={() => handleDeleteRecording(recording.id)}
+                              style={styles.deleteButton}
+                            >
+                              🗑️ Delete
+                            </button>
+                          </div>
                         </div>
-                        <div style={{display: 'flex', gap: '0.5rem'}}>
-                          <button
-                            onClick={() => navigate(`/evaluations/${recording.id}`)}
-                            style={styles.detailsButton}
-                          >
-                            View Details →
-                          </button>
-                          <button
-                            onClick={() => handleDeleteRecording(recording.id)}
-                            style={styles.deleteButton}
-                          >
-                            🗑️ Delete
-                          </button>
+                      ) : (
+                        <div key={recording.id} style={styles.recordingListItem}>
+                          <div style={styles.recordingListInfo}>
+                            <h4 style={styles.recordingListName}>{recording.original_filename}</h4>
+                            <p style={styles.recordingListDetail}>
+                              {formatFileSize(recording.file_size)} • {formatDuration(recording.duration)} • {new Date(recording.uploaded_at).toLocaleDateString()}
+                              <span style={{marginLeft: '1rem', color: daysLeft <= 3 ? '#d32f2f' : '#666', fontWeight: daysLeft <= 3 ? 'bold' : 'normal'}}>
+                                {isExpired ? '⏰ Expired' : `⏰ ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`}
+                              </span>
+                            </p>
+                          </div>
+                          <div style={styles.recordingListActions}>
+                            <div
+                              onClick={() => navigate(`/evaluations/${recording.id}`)}
+                              style={{
+                                ...styles.statusBadge,
+                                cursor: 'pointer',
+                                backgroundColor: getEvaluationStatusText(recording.id).color,
+                                transition: 'all 0.2s',
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+                              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                            >
+                              {getEvaluationStatusText(recording.id).text}
+                            </div>
+                            <button
+                              onClick={() => handleDeleteRecording(recording.id)}
+                              style={styles.deleteButton}
+                              title="Delete this recording"
+                            >
+                              🗑️ Delete
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    </div>
+                      )
+                    })}
                   </div>
                 </div>
               )
@@ -325,11 +387,41 @@ const styles = {
     marginBottom: '2rem',
     position: 'relative',
     zIndex: 10,
+    gap: '1rem',
+    flexWrap: 'wrap',
   } as React.CSSProperties,
   heading: {
     marginTop: 0,
     color: '#333',
   } as React.CSSProperties,
+  headerControls: {
+    display: 'flex',
+    gap: '1rem',
+    alignItems: 'center',
+    flex: 1,
+    minWidth: '300px',
+  } as React.CSSProperties,
+  searchInput: {
+    flex: 1,
+    padding: '0.5rem 1rem',
+    border: '1px solid #ddd',
+    borderRadius: '4px',
+    fontSize: '0.9rem',
+    minWidth: '200px',
+  } as React.CSSProperties,
+  viewToggle: { display: 'flex', gap: '0.5rem', flexShrink: 0 } as React.CSSProperties,
+  viewButton: {
+    padding: '0.5rem 1rem',
+    backgroundColor: '#e0e0e0',
+    color: '#333',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '0.9rem',
+    transition: 'all 0.2s',
+  } as React.CSSProperties,
+  section: { marginBottom: '2rem' } as React.CSSProperties,
+  sectionTitle: { color: '#333', fontSize: '1.1rem', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '2px solid #007bff' } as React.CSSProperties,
   uploadButton: {
     padding: '0.5rem 1rem',
     backgroundColor: '#28a745',
@@ -352,12 +444,22 @@ const styles = {
     gap: '1rem',
     marginTop: '1rem',
   } as React.CSSProperties,
+  listLayout: { gridTemplateColumns: '1fr', gap: '0.5rem' } as React.CSSProperties,
   recordingCard: {
     backgroundColor: 'white',
     padding: '1.5rem',
     borderRadius: '8px',
     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    display: 'flex',
+    gap: '1rem',
+    alignItems: 'flex-start',
   } as React.CSSProperties,
+  recordingActionsColumn: { display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '20%', minWidth: '120px', flexShrink: 0, justifyContent: 'space-between', alignItems: 'stretch', minHeight: '80px' } as React.CSSProperties,
+  recordingListItem: { backgroundColor: 'white', padding: '1rem', borderRadius: '6px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: '4px solid #007bff' } as React.CSSProperties,
+  recordingListInfo: { flex: 1 } as React.CSSProperties,
+  recordingListName: { margin: 0, color: '#333', fontSize: '1rem' } as React.CSSProperties,
+  recordingListDetail: { margin: '0.25rem 0', color: '#666', fontSize: '0.85rem' } as React.CSSProperties,
+  recordingListActions: { display: 'flex', gap: '0.5rem', marginLeft: '1rem', flexShrink: 0, alignItems: 'center' } as React.CSSProperties,
   recordingInfo: {
     flex: 1,
   } as React.CSSProperties,
@@ -391,14 +493,15 @@ const styles = {
     whiteSpace: 'nowrap',
   } as React.CSSProperties,
   deleteButton: {
-    padding: '0.4rem 0.8rem',
+    padding: '0.5rem 0.75rem',
     backgroundColor: '#dc3545',
     color: 'white',
     border: 'none',
     borderRadius: '4px',
     cursor: 'pointer',
-    fontSize: '0.85rem',
-    whiteSpace: 'nowrap',
+    fontSize: '0.8rem',
+    width: '100%',
+    textAlign: 'center',
   } as React.CSSProperties,
   emptyState: {
     backgroundColor: 'white',

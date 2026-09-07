@@ -79,6 +79,7 @@ class RecordingForQueueResponse(BaseModel):
     original_filename: str
     uploaded_at: datetime
     expires_at: datetime
+    video_url: str
 
     class Config:
         from_attributes = True
@@ -126,6 +127,7 @@ class RecordingEvaluationDetailResponse(BaseModel):
     uploaded_at: datetime
     expires_at: datetime
     is_expired: bool
+    video_url: str
     aggregate_score: Optional[float]
     total_judges: int
     evaluations: List[JudgeEvaluationItemResponse]

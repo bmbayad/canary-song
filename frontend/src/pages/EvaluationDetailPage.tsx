@@ -32,6 +32,7 @@ interface EvaluationDetail {
   uploaded_at: string
   expires_at: string
   is_expired: boolean
+  video_url: string
   aggregate_score: number | null
   total_judges: number
   evaluations: JudgeEvaluation[]
@@ -156,6 +157,24 @@ const EvaluationDetailPage: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Video Player */}
+        {detail.video_url && !detail.is_expired && (
+          <div style={styles.videoContainer}>
+            <video
+              controls
+              style={styles.videoPlayer}
+              src={detail.video_url}
+            >
+              Your browser doesn't support video playback
+            </video>
+          </div>
+        )}
+        {detail.is_expired && (
+          <div style={styles.expiredVideoBox}>
+            <p>📹 Video playback unavailable - recording has expired</p>
+          </div>
+        )}
 
         {/* Aggregate Score */}
         {detail.aggregate_score !== null && (
@@ -523,6 +542,28 @@ const styles = {
     borderRadius: '4px',
     padding: '1rem',
     marginTop: '2rem',
+  } as React.CSSProperties,
+  videoContainer: {
+    backgroundColor: '#000',
+    borderRadius: '8px',
+    padding: '1rem',
+    marginBottom: '2rem',
+    display: 'flex',
+    justifyContent: 'center',
+  } as React.CSSProperties,
+  videoPlayer: {
+    maxWidth: '100%',
+    maxHeight: '600px',
+    borderRadius: '4px',
+  } as React.CSSProperties,
+  expiredVideoBox: {
+    backgroundColor: '#ffebee',
+    border: '1px solid #d32f2f',
+    borderRadius: '8px',
+    padding: '2rem',
+    textAlign: 'center',
+    marginBottom: '2rem',
+    color: '#d32f2f',
   } as React.CSSProperties,
 }
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 
@@ -17,35 +17,41 @@ interface Recording {
   aggregate_score: number | null
 }
 
-const MyEvaluationsPage: React.FC = () => {
+const BirdRecordingsPage: React.FC = () => {
+  const { birdId } = useParams<{ birdId: string }>()
+  const location = useLocation()
   const { logout, apiClient } = useAuth()
   const navigate = useNavigate()
   const { t } = useTranslation()
 
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
+  const birdName = location.state?.birdName || 'Bird'
   const [recordings, setRecordings] = useState<Recording[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadRecordings()
-  }, [])
+  }, [birdId])
 
   const loadRecordings = async () => {
     try {
       setLoading(true)
       const response = await apiClient.get('/evaluations/results')
-      setRecordings(response.data)
+      const allRecordings = response.data as Recording[]
+      const filtered = allRecordings.filter(r => r.bird_name === birdName)
+      setRecordings(filtered)
       setError(null)
     } catch (err: any) {
-      console.error('Failed to load evaluations:', err)
-      setError(err.response?.data?.detail || 'Failed to load evaluations')
+      console.error('Failed to load recordings:', err)
+      setError(err.response?.data?.detail || 'Failed to load recordings')
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
   }
 
   const getStatusBadge = (completed: number, unable: number, total: number) => {
@@ -64,13 +70,13 @@ const MyEvaluationsPage: React.FC = () => {
     return (
       <div style={styles.container}>
         <nav style={styles.nav}>
-          <h1 style={styles.navTitle}>Canary Evaluation Platform</h1>
+          <h1 style={styles.navTitle}>{birdName} - Recordings</h1>
           <div style={styles.navRight}>
+            <button onClick={() => navigate('/my-birds')} style={styles.navButton}>
+              ← Back to Birds
+            </button>
             <button onClick={() => navigate('/dashboard')} style={styles.navButton}>
               🏠 Home
-            </button>
-            <button onClick={() => navigate('/profile')} style={styles.navButton}>
-              {t('nav.profile')}
             </button>
             <button onClick={handleLogout} style={styles.logoutButton}>
               {t('auth.logout')}
@@ -87,13 +93,13 @@ const MyEvaluationsPage: React.FC = () => {
   return (
     <div style={styles.container}>
       <nav style={styles.nav}>
-        <h1 style={styles.navTitle}>Canary Evaluation Platform</h1>
+        <h1 style={styles.navTitle}>{birdName} - Recordings</h1>
         <div style={styles.navRight}>
+          <button onClick={() => navigate('/my-birds')} style={styles.navButton}>
+            ← Back to Birds
+          </button>
           <button onClick={() => navigate('/dashboard')} style={styles.navButton}>
             🏠 Home
-          </button>
-          <button onClick={() => navigate('/profile')} style={styles.navButton}>
-            {t('nav.profile')}
           </button>
           <button onClick={handleLogout} style={styles.logoutButton}>
             {t('auth.logout')}
@@ -112,7 +118,7 @@ const MyEvaluationsPage: React.FC = () => {
           <div style={styles.emptyState}>
             <p style={styles.emptyIcon}>📋</p>
             <h3>No Recordings Yet</h3>
-            <p>Create a bird and upload recordings to see evaluation results here.</p>
+            <p>Upload recordings for {birdName} to see evaluation results here.</p>
             <button
               onClick={() => navigate('/my-birds')}
               style={styles.primaryButton}
@@ -122,6 +128,11 @@ const MyEvaluationsPage: React.FC = () => {
           </div>
         ) : (
           <div style={styles.recordingsList}>
+            <div style={styles.header}>
+              <h2>{birdName}</h2>
+              <p style={styles.subtitle}>{recordings.length} recording{recordings.length !== 1 ? 's' : ''}</p>
+            </div>
+
             {recordings.map((recording) => {
               const status = getStatusBadge(
                 recording.completed_count,
@@ -146,7 +157,7 @@ const MyEvaluationsPage: React.FC = () => {
                 >
                   <div style={styles.recordingHeader}>
                     <div style={styles.recordingInfo}>
-                      <h3 style={styles.birdName}>{recording.bird_name}</h3>
+                      <h3 style={styles.fileName}>{recording.bird_name}</h3>
                       <p style={styles.details}>
                         Band: {recording.leg_band_number} • Type: {recording.bird_type_name}
                       </p>
@@ -244,14 +255,6 @@ const styles = {
     borderRadius: '4px',
     cursor: 'pointer',
   } as React.CSSProperties,
-  backButton: {
-    padding: '0.5rem 1rem',
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-  } as React.CSSProperties,
   main: {
     flex: 1,
     padding: '2rem',
@@ -276,6 +279,14 @@ const styles = {
     fontSize: '3rem',
     margin: 0,
   } as React.CSSProperties,
+  header: {
+    marginBottom: '2rem',
+  } as React.CSSProperties,
+  subtitle: {
+    color: '#666',
+    margin: '0.5rem 0 0 0',
+    fontSize: '0.95rem',
+  } as React.CSSProperties,
   recordingsList: {
     display: 'flex',
     flexDirection: 'column',
@@ -299,7 +310,7 @@ const styles = {
   recordingInfo: {
     flex: 1,
   } as React.CSSProperties,
-  birdName: {
+  fileName: {
     margin: '0 0 0.5rem 0',
     color: '#333',
     fontSize: '1.2rem',
@@ -370,4 +381,4 @@ const styles = {
   } as React.CSSProperties,
 }
 
-export default MyEvaluationsPage
+export default BirdRecordingsPage
