@@ -669,6 +669,26 @@ Selecting "Unable to Evaluate" requires a reason.
 
 The reason must be stored with the evaluation.
 
+## 17.3 Judge Evaluation History
+
+Shows a complete history of all evaluations completed by the judge.
+
+Displays:
+
+- Total evaluation statistics (Completed, Unable to Evaluate, In Progress counts)
+- Individual evaluation cards showing:
+  - Recording ID
+  - Submission date and time
+  - Status (Completed, Unable to Evaluate, In Progress)
+  - For submitted evaluations:
+    - Total score
+    - Categorical score breakdown with individual scores
+    - Comments (if provided)
+  - For unable-to-evaluate evaluations:
+    - Reason provided
+
+Judges can reference their evaluation history for quality assurance and personal record-keeping.
+
 ---
 
 # 18. Judge Profile
@@ -702,43 +722,102 @@ This does not have to be implemented in the first release.
 
 # 19. Admin Screens
 
-## 19.1 Manage Judges
+## 19.1 Admin Dashboard
+
+Provides navigation for all administrative functions:
+
+- Manage Judges
+- Manage Bird Types
+- Manage Scoring Configuration
+- Set Retention Period
+
+The dashboard displays quick-access cards for each administrative function.
+
+## 19.2 Manage Judges
 
 Admins can:
 
-- Create judge accounts.
-- Activate judges.
-- Deactivate judges.
-- View judge status.
-- Manage certification/status information.
+- Create new judge accounts
+- View all judge accounts
+- Activate judges
+- Deactivate judges
+- Suspend judges
+- View judge status and creation date
 
-## 19.2 Manage Bird Types
+Each judge is displayed with:
+
+- Display name
+- Email address
+- First and last name
+- Current status (Active, Inactive, Suspended)
+- Option to change status via dropdown
+
+## 19.3 Manage Bird Types
 
 Admins can:
 
-- Create bird types.
-- Edit bird types.
-- Activate/deactivate bird types.
+- Create bird types
+- View all bird types (including inactive)
+- Edit bird type information
+- Activate/deactivate bird types
 
-## 19.3 Manage Scoring Categories
+Each bird type displays:
 
-Admins can configure:
+- Name
+- Description
+- Active status
+- Option to toggle active status
+
+Deactivating a bird type prevents it from being selected for newly created birds but does not invalidate existing birds, recordings, or evaluations.
+
+## 19.4 Manage Scoring Configurations & Categories
+
+Admins can:
+
+- View existing scoring configurations
+- Create new scoring configurations for bird types
+- View all scoring categories for a configuration
+- Create scoring categories with:
+  - Category name
+  - Description
+  - Minimum points
+  - Maximum points
+  - Display order
+- Edit scoring categories
+- Deactivate scoring categories
+- Delete scoring categories (if not used in historical evaluations)
+
+Scoring configuration changes do NOT modify historical evaluations.
+
+Each scoring configuration displays:
+
+- Bird type name
+- Configuration name
+- Version number
+- Active status
+- List of scoring categories
+
+Each category displays:
 
 - Category name
-- Description
-- Minimum points
-- Maximum points
+- Point range (min-max)
 - Display order
-- Active/inactive status
-- Applicable bird type
+- Active status
+- Edit/delete controls
 
-## 19.4 Set Retention Period
+## 19.5 Set Retention Period
 
-Admins can configure the number of days media remains available.
+Admins can:
 
-Default:
+- View current media retention period (default: 14 days)
+- Configure the number of days media remains available
+- See the impact of retention changes
 
-    14 days
+The retention period is:
+
+- Applied to all new recordings
+- Configurable in days
+- Displayed to users as a countdown
 
 ---
 
@@ -1543,11 +1622,14 @@ Build:
 - File size validation
 - Duration validation
 - Cloudflare R2 integration
+- Ensure that client utilize presigned url operation for frontend.
 - Bird-to-recording relationship
 - Recording bird type relationship
 - Media metadata
 - Expiration timestamp
 - Upload UI
+
+
 
 ### Phase 3 Goal
 
@@ -1598,10 +1680,13 @@ Build:
 - Historical scoring snapshots
 - Comparison view
 - Aggregate/final score behavior where applicable
+- Judge evaluation history (for reference)
 
 ### Phase 5 Goal
 
 Participants can see complete evaluation results while preserving the exact scoring configuration used during evaluation.
+
+Judges can view their complete evaluation history for personal reference and quality assurance.
 
 ---
 
@@ -1636,6 +1721,44 @@ Build:
 ### Phase 7 Goal
 
 Media is automatically deleted after the configured retention period while all historical database records and evaluations remain intact.
+
+### Phase 7 Implementation
+
+**Admin Retention Configuration Screen:**
+
+Admins can:
+- View current media retention period (default: 14 days)
+- Update retention period (1-365 days)
+- See impact of changes (only affects new recordings)
+- Confirm existing recordings retain their original expiration dates
+
+**Scheduled Cleanup Process:**
+
+- APScheduler runs every 1 hour
+- Finds all recordings where expires_at <= now and status != EXPIRED
+- For each expired recording:
+  - Delete media file from Cloudflare R2
+  - Mark recording status as EXPIRED
+  - Preserve all database records (metadata, evaluations, scores)
+- Retry-safe: Failed deletions are logged but don't block other deletions
+
+**Data Preservation:**
+
+After media deletion:
+- Recording metadata remains accessible
+- Evaluation history remains complete
+- Submitted scores remain unchanged
+- Historical scoring snapshots remain accessible
+- Bird information and type remain intact
+- UI indicates that media has expired
+- Participants can still view historical evaluations
+
+**UI Countdown Display:**
+
+- Recordings show "X days until expiration" countdown
+- After expiration, shows "Media Expired" status
+- Evaluation detail page indicates expired status
+- All functionality remains available except media playback
 
 ---
 

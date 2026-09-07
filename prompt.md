@@ -473,6 +473,8 @@ Issues or decisions requiring my attention:
 Deferred to later phases:
 - [summary]
 
+Update the implementation_status.md file
+
 Then STOP.
 
 Do not begin the next phase.
