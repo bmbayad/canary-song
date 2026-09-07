@@ -45,3 +45,11 @@ logs/
 # Temp files
 tmp/
 temp/
+
+# Media files
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.wav
+*.mp3
