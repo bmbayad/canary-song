@@ -136,8 +136,7 @@ const BirdRecordingsPage: React.FC = () => {
             {recordings.map((recording) => {
               const status = getStatusBadge(
                 recording.completed_count,
-                recording.unable_count,
-                recording.total_judges
+                recording.unable_count
               )
               const uploadDate = new Date(recording.uploaded_at)
               const expiresDate = new Date(recording.expires_at)
