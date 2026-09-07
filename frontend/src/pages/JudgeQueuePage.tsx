@@ -15,7 +15,7 @@ interface Recording {
 }
 
 const JudgeQueuePage: React.FC = () => {
-  const { user, logout, apiClient } = useAuth()
+  const { logout, apiClient } = useAuth()
   const navigate = useNavigate()
   const { t } = useTranslation()
 

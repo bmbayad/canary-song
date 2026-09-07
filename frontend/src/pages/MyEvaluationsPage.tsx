@@ -48,7 +48,7 @@ const MyEvaluationsPage: React.FC = () => {
     }
   }
 
-  const getStatusBadge = (completed: number, unable: number, total: number) => {
+  const getStatusBadge = (completed: number, unable: number) => {
     const totalEvaluated = completed + unable
 
     if (totalEvaluated === 0) {

@@ -1,9 +1,31 @@
 services:
-  # A Docker web service
+  # FastAPI backend service
   - type: web
-    name: fastapi-example
+    name: canary-backend
     runtime: python
-    plan: free
-    autoDeploy: false
+    plan: standard
+    autoDeploy: true
     buildCommand: cd backend && pip install -r requirements.txt && alembic upgrade head
     startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "1440"
+      - key: ENVIRONMENT
+        value: production
+
+  # React frontend static site
+  - type: web
+    name: canary-frontend
+    runtime: node
+    plan: standard
+    autoDeploy: true
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm run preview
+    staticSite: true
+    buildDir: frontend/dist

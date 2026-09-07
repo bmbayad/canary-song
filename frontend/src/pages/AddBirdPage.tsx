@@ -51,7 +51,7 @@ const AddBirdPage: React.FC = () => {
     setIsSubmitting(true)
 
     try {
-      const response = await apiClient.post('/birds', {
+      await apiClient.post('/birds', {
         name,
         leg_band_number: legBandNumber,
         bird_type_id: birdTypeId,

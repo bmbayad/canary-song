@@ -19,18 +19,11 @@ interface ScoringConfiguration {
   categories: ScoringCategory[]
 }
 
-interface LocationState {
-  recordingId: string
-  scoringConfiguration: ScoringConfiguration
-  videoUrl?: string
-}
-
 const ScoreEntryPage: React.FC = () => {
   const { evaluationId } = useParams<{ evaluationId: string }>()
   const location = useLocation()
   const { apiClient } = useAuth()
   const navigate = useNavigate()
-  const { t } = useTranslation()
 
   const [scores, setScores] = useState<Record<string, number>>({})
   const [comments, setComments] = useState('')

@@ -18,7 +18,7 @@ interface BirdType {
 }
 
 const MyBirdsPage: React.FC = () => {
-  const { user, logout, apiClient } = useAuth()
+  const { logout, apiClient } = useAuth()
   const navigate = useNavigate()
   const { t } = useTranslation()
 

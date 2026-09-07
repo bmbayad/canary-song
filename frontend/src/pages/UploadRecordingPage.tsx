@@ -137,7 +137,7 @@ const UploadRecordingPage: React.FC = () => {
         video.src = videoUrl
       })
 
-      const confirmResponse = await apiClient.post('/recordings/confirm-upload', {
+      await apiClient.post('/recordings/confirm-upload', {
         recording_id,
         file_size: file.size,
         duration,

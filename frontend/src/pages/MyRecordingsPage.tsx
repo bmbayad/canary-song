@@ -23,7 +23,7 @@ interface Bird {
 }
 
 const MyRecordingsPage: React.FC = () => {
-  const { user, logout, apiClient } = useAuth()
+  const { logout, apiClient } = useAuth()
   const navigate = useNavigate()
   const { t } = useTranslation()
 
@@ -40,7 +40,7 @@ const MyRecordingsPage: React.FC = () => {
     loadBirds()
   }, [])
 
-  const loadEvaluationStatus = async (recordingIds: string[]) => {
+  const loadEvaluationStatus = async () => {
     try {
       const response = await apiClient.get('/evaluations/results')
       const statusMap: Record<string, any> = {}
@@ -78,7 +78,7 @@ const MyRecordingsPage: React.FC = () => {
       const recs = response.data.recordings || []
       setRecordings(recs)
       if (recs.length > 0) {
-        await loadEvaluationStatus(recs.map((r: Recording) => r.id))
+        await loadEvaluationStatus()
       }
     } catch (error: any) {
       setMessage('Failed to load recordings')

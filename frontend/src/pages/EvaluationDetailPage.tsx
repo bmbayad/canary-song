@@ -117,7 +117,6 @@ const EvaluationDetailPage: React.FC = () => {
   const unableEvals = detail.evaluations.filter(
     (e) => e.status === 'Unable to Evaluate'
   )
-  const pendingCount = detail.total_judges - submittedEvals.length - unableEvals.length
 
   return (
     <div style={styles.container}>
