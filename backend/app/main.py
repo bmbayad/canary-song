@@ -72,9 +72,32 @@ def init_scheduler():
         logger.error(f"Failed to initialize scheduler: {str(e)}")
 
 
+def init_database():
+    """Initialize default data on first run"""
+    try:
+        from app.db.database import SessionLocal
+        from app.models.bird import BirdType
+        from app.services.bird_service import create_bird_types
+
+        db = SessionLocal()
+        try:
+            # Check if bird_types exist
+            count = db.query(BirdType).count()
+            if count == 0:
+                create_bird_types(db)
+                logger.info("✓ Bird types initialized")
+            else:
+                logger.info(f"✓ Database has {count} bird types")
+        finally:
+            db.close()
+    except Exception as e:
+        logger.error(f"Database initialization error: {str(e)}")
+
+
 @app.on_event("startup")
 def startup_event():
-    """Initialize scheduler on app startup"""
+    """Initialize database and scheduler on app startup"""
+    init_database()
     init_scheduler()
 
 

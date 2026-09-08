@@ -49,36 +49,8 @@ async def get_current_user(
     return user
 
 
-async def get_admin_user(current_user: User = Depends(get_current_user)) -> User:
-    if current_user.role.value != "Admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required",
-        )
-    return current_user
-
-
-async def get_participant_user(current_user: User = Depends(get_current_user)) -> User:
-    if current_user.role.value != "Participant":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Participant access required",
-        )
-    return current_user
-
-
-async def get_judge_user(current_user: User = Depends(get_current_user)) -> User:
-    if current_user.role.value != "Judge":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Judge access required",
-        )
-    return current_user
-
-
-
 def get_admin_user(current_user: User = Depends(get_current_user)) -> User:
-    if current_user.role.value != "Admin":
+    if current_user.role != "Admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required",
@@ -87,7 +59,7 @@ def get_admin_user(current_user: User = Depends(get_current_user)) -> User:
 
 
 def get_participant_user(current_user: User = Depends(get_current_user)) -> User:
-    if current_user.role.value != "Participant":
+    if current_user.role != "Participant":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Participant access required",
@@ -96,7 +68,7 @@ def get_participant_user(current_user: User = Depends(get_current_user)) -> User
 
 
 def get_judge_user(current_user: User = Depends(get_current_user)) -> User:
-    if current_user.role.value != "Judge":
+    if current_user.role != "Judge":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Judge access required",
