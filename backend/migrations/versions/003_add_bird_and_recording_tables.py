@@ -1,6 +1,6 @@
 """Add bird, recording, and evaluation tables
 
-Revision ID: 003_add_bird_recording_evaluation
+Revision ID: 003_bird_tables
 Revises: 002_system_configuration
 Create Date: 2026-09-08 00:00:00.000000
 
@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-revision = '003_add_bird_recording_evaluation'
+revision = '003_bird_tables'
 down_revision = '002_system_configuration'
 branch_labels = None
 depends_on = None
