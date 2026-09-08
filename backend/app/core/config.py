@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     debug: bool = os.getenv("DEBUG", "True").lower() == "true"
 
+    # Admin account initialization
+    create_admin_email: str = os.getenv("CREATE_ADMIN_EMAIL", "")
+    create_admin_password: str = os.getenv("CREATE_ADMIN_PASSWORD", "")
+
     # CORS
     allowed_origins: list = ["http://localhost:3000", "http://localhost:8000"]
 

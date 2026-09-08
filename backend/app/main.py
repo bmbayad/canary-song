@@ -77,17 +77,38 @@ def init_database():
     try:
         from app.db.database import SessionLocal
         from app.models.bird import BirdType
+        from app.models.user import User
         from app.services.bird_service import create_bird_types
 
         db = SessionLocal()
         try:
-            # Check if bird_types exist
+            # Initialize bird types
             count = db.query(BirdType).count()
             if count == 0:
                 create_bird_types(db)
                 logger.info("✓ Bird types initialized")
             else:
                 logger.info(f"✓ Database has {count} bird types")
+
+            # Initialize admin user if credentials provided
+            if settings.create_admin_email and settings.create_admin_password:
+                admin = db.query(User).filter(User.email == settings.create_admin_email).first()
+                if not admin:
+                    from app.core.security import hash_password
+                    admin_user = User(
+                        email=settings.create_admin_email,
+                        password_hash=hash_password(settings.create_admin_password),
+                        first_name="Admin",
+                        last_name="User",
+                        role="Admin",
+                        status="Active",
+                        password_reset_required=False,
+                    )
+                    db.add(admin_user)
+                    db.commit()
+                    logger.info(f"✓ Admin user created: {settings.create_admin_email}")
+                else:
+                    logger.info(f"✓ Admin user already exists: {settings.create_admin_email}")
         finally:
             db.close()
     except Exception as e:
