@@ -51,6 +51,7 @@ class EvaluationResponse(BaseModel):
     started_at: datetime
     submitted_at: Optional[datetime]
     scores: List[EvaluationScoreResponse]
+    scoring_configuration: Optional[ScoringConfigurationResponse] = None
 
     class Config:
         from_attributes = True

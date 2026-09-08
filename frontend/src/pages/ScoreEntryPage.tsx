@@ -41,27 +41,19 @@ const ScoreEntryPage: React.FC = () => {
     const loadEvaluationData = async () => {
       if (!location.state?.scoringConfiguration && evaluationId) {
         try {
-          // Fetch the evaluation to get the recording ID
+          // Fetch the evaluation with its scoring configuration
           const evalResponse = await apiClient.get(`/evaluations/${evaluationId}`)
           const evaluation = evalResponse.data
 
-          if (!evaluation || !evaluation.recording_id) {
-            throw new Error('Could not find recording for this evaluation')
+          if (!evaluation) {
+            throw new Error('Evaluation not found')
           }
 
           setComments(evaluation.comments || '')
 
-          // The scoring configuration was stored when the evaluation was started
-          // We need to fetch it based on the recording's bird type
-          // For now, let's try to re-start the evaluation to get the config
-          // This won't create a duplicate because we already have an evaluation
-          try {
-            const startResponse = await apiClient.post(`/evaluations/${evaluation.recording_id}/start`)
-            if (startResponse.data.scoring_configuration) {
-              setLoadedConfig(startResponse.data.scoring_configuration)
-            }
-          } catch (startErr) {
-            // If start fails, it's OK - we're resuming, not starting
+          if (evaluation.scoring_configuration) {
+            setLoadedConfig(evaluation.scoring_configuration)
+          } else {
             setError('Could not load scoring configuration')
           }
         } catch (err: any) {

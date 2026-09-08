@@ -372,4 +372,30 @@ def get_evaluation(
             detail="Evaluation not found"
         )
 
-    return evaluation
+    # Fetch scoring configuration and categories for resuming
+    scoring_config = None
+    if evaluation.scoring_configuration:
+        categories = get_active_categories(db, evaluation.scoring_configuration_id)
+        scoring_config = {
+            "id": evaluation.scoring_configuration.id,
+            "bird_type_id": evaluation.scoring_configuration.bird_type_id,
+            "name": evaluation.scoring_configuration.name,
+            "description": evaluation.scoring_configuration.description,
+            "version": evaluation.scoring_configuration.version,
+            "categories": [
+                {
+                    "id": cat.id,
+                    "name": cat.name,
+                    "description": cat.description,
+                    "minimum_points": cat.minimum_points,
+                    "maximum_points": cat.maximum_points,
+                    "display_order": cat.display_order,
+                }
+                for cat in categories
+            ]
+        }
+
+    # Convert to dict and add scoring_configuration
+    eval_dict = evaluation.__dict__.copy()
+    eval_dict['scoring_configuration'] = scoring_config
+    return eval_dict
