@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from datetime import timedelta
+import os
 
 from app.db.database import get_db
 from app.schemas.user import (
@@ -19,10 +20,17 @@ from app.services.user_service import (
 )
 from app.core.security import create_access_token
 from app.core.deps import get_current_user
-from app.models.user import User
+from app.models.user import User, UserRole
 from datetime import datetime
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+class AdminRegistrationRequest(BaseModel):
+    email: str
+    password: str
+    secret_key: str
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
@@ -149,4 +157,56 @@ def refresh_token(current_user: User = Depends(get_current_user)):
         access_token=access_token,
         token_type="bearer",
         user=UserResponse.model_validate(current_user),
+    )
+
+
+@router.post("/register-admin", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+def register_admin(admin_request: AdminRegistrationRequest, db: Session = Depends(get_db)):
+    """
+    Register the first admin account (only if no admins exist).
+    Requires ADMIN_SECRET_KEY environment variable.
+    """
+    from app.core.security import hash_password
+
+    # Check if secret key is correct
+    expected_secret = os.getenv("ADMIN_SECRET_KEY")
+    if not expected_secret or admin_request.secret_key != expected_secret:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid secret key",
+        )
+
+    # Check if any admin already exists
+    existing_admin = db.query(User).filter(User.role == UserRole.ADMIN).first()
+    if existing_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin account already exists. Use regular registration.",
+        )
+
+    # Check if email already in use
+    existing_user = get_user_by_email(db, admin_request.email)
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered",
+        )
+
+    # Create admin user
+    admin_user = User(
+        email=admin_request.email,
+        password_hash=hash_password(admin_request.password),
+        role=UserRole.ADMIN,
+        status="ACTIVE",
+    )
+    db.add(admin_user)
+    db.commit()
+    db.refresh(admin_user)
+
+    access_token = create_access_token(data={"sub": str(admin_user.id)})
+
+    return TokenResponse(
+        access_token=access_token,
+        token_type="bearer",
+        user=UserResponse.model_validate(admin_user),
     )
