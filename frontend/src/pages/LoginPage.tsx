@@ -27,7 +27,10 @@ const LoginPage: React.FC = () => {
       await login(email, password)
       navigate('/dashboard')
     } catch (err: any) {
-      setError(err.response?.data?.detail || t('auth.invalidCredentials'))
+      const errorMsg = err.response?.data?.detail || t('auth.invalidCredentials')
+      setError(errorMsg)
+      // Keep password field for retry, but don't clear anything
+      setPassword('')
     } finally {
       setIsLoading(false)
     }
