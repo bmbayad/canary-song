@@ -14,9 +14,11 @@ frontend/dist/
 frontend/.next/
 
 # Backend
-backend/__pycache__/
+**/__pycache__/
 backend/*.pyc
 backend/*.pyo
+**/*.pyc
+**/*.pyo
 backend/.pytest_cache/
 backend/.venv/
 backend/venv/
