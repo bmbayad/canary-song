@@ -26,8 +26,8 @@ def create_user(db: Session, user_create: UserCreate) -> User:
         timezone=user_create.timezone,
         country_region=user_create.country_region,
         phone=user_create.phone,
-        role=UserRole.PARTICIPANT,
-        status=UserStatus.ACTIVE,
+        role='Participant',
+        status='Active',
     )
     db.add(db_user)
     db.commit()
@@ -49,7 +49,7 @@ def verify_user_password(db: Session, email: str, password: str) -> Optional[Use
         return None
     if not verify_password(password, user.password_hash):
         return None
-    if user.status != UserStatus.ACTIVE:
+    if user.status != 'Active':
         return None
     return user
 
@@ -90,8 +90,8 @@ def get_or_create_user_from_google(
         first_name=first_name,
         last_name=last_name,
         display_name=first_name,
-        role=UserRole.PARTICIPANT,
-        status=UserStatus.ACTIVE,
+        role='Participant',
+        status='Active',
     )
     db.add(new_user)
     db.flush()

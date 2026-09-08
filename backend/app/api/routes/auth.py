@@ -196,8 +196,8 @@ def register_admin(admin_request: AdminRegistrationRequest, db: Session = Depend
     admin_user = User(
         email=admin_request.email,
         password_hash=hash_password(admin_request.password),
-        role=UserRole.ADMIN,
-        status="ACTIVE",
+        role='Admin',
+        status='Active',
     )
     db.add(admin_user)
     db.commit()
