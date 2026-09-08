@@ -38,11 +38,9 @@ const MyBirdsPage: React.FC = () => {
 
   const loadBirdTypes = async () => {
     try {
-      const response = await fetch('http://localhost:8000/birds/types')
-      if (!response.ok) throw new Error('Failed to fetch bird types')
-      const data = await response.json()
+      const response = await apiClient.get('/birds/types')
       const types: Record<string, string> = {}
-      data.forEach((bt: BirdType) => {
+      response.data.forEach((bt: BirdType) => {
         types[bt.id] = bt.name
       })
       setBirdTypes(types)

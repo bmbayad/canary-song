@@ -29,13 +29,10 @@ const AddBirdPage: React.FC = () => {
 
   const loadBirdTypes = async () => {
     try {
-      // Bird types endpoint is public, use fetch directly
-      const response = await fetch('http://localhost:8000/birds/types')
-      if (!response.ok) throw new Error('Failed to fetch bird types')
-      const data = await response.json()
-      setBirdTypes(data)
-      if (data.length > 0) {
-        setBirdTypeId(data[0].id)
+      const response = await apiClient.get('/birds/types')
+      setBirdTypes(response.data)
+      if (response.data.length > 0) {
+        setBirdTypeId(response.data[0].id)
       }
     } catch (error) {
       setError('Failed to load bird types')
