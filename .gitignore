@@ -48,6 +48,8 @@ logs/
 tmp/
 temp/
 render_deployment.txt
+SCHEMA_AUDIT.md
+backend/.env.test
 
 # Media files
 *.mp4
