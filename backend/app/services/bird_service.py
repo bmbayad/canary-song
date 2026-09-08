@@ -10,9 +10,9 @@ from fastapi import HTTPException, status
 def create_bird_types(db: Session):
     """Initialize default bird types"""
     types = [
-        {"name": "Canary – Waterslager", "description": "Waterslager canary"},
-        {"name": "Canary – Roller", "description": "Roller canary"},
-        {"name": "Canary – American Singer", "description": "American Singer canary"},
+        {"name": "Canary - Waterslager", "description": "Waterslager canary"},
+        {"name": "Canary - Roller", "description": "Roller canary"},
+        {"name": "Canary - American Singer", "description": "American Singer canary"},
     ]
 
     for bird_type in types:
