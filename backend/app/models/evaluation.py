@@ -62,7 +62,7 @@ class Evaluation(Base):
     recording_id = Column(UUID(as_uuid=True), ForeignKey("recordings.id"), nullable=False, index=True)
     judge_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
     scoring_configuration_id = Column(UUID(as_uuid=True), ForeignKey("scoring_configurations.id"), nullable=False)
-    status = Column(SQLEnum(EvaluationStatus), default=EvaluationStatus.IN_PROGRESS, nullable=False)
+    status = Column(SQLEnum('In Progress', 'Submitted', 'Unable to Evaluate', name='evaluationstatus'), default='In Progress', nullable=False)
     total_score = Column(Float, nullable=True)
     comments = Column(Text, nullable=True)
     unable_to_evaluate_reason = Column(Text, nullable=True)
@@ -95,6 +95,7 @@ class EvaluationScore(Base):
     maximum_points_snapshot = Column(Integer, nullable=False)
     score = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     evaluation = relationship("Evaluation", back_populates="scores")
 

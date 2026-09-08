@@ -44,7 +44,7 @@ class Bird(Base):
     bird_type_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     sex = Column(String, nullable=True)
     notes = Column(String, nullable=True)
-    status = Column(Enum(BirdStatus), default=BirdStatus.ACTIVE, nullable=False)
+    status = Column(Enum('Active', 'Archived', name='birdstatus'), default='Active', nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 

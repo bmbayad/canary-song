@@ -29,7 +29,9 @@ class Recording(Base):
     duration = Column(Integer, nullable=False)
     uploaded_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     expires_at = Column(DateTime, nullable=False)
-    status = Column(SQLEnum(RecordingStatus), default=RecordingStatus.PENDING, nullable=False)
+    status = Column(SQLEnum('Pending', 'In Progress', 'Completed', 'Unable to Evaluate', 'Expired', name='recordingstatus'), default='Pending', nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     bird = relationship("Bird", back_populates="recordings")
     bird_type = relationship("BirdType")
