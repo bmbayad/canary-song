@@ -20,7 +20,13 @@ app = FastAPI(
 # CORS configuration - must be before routes
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3001", "http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3001"],
+    allow_origins=[
+        "http://localhost:3001",
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:3001",
+        "https://canary-singer.onrender.com",
+    ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
